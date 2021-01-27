@@ -28,6 +28,7 @@ class Form extends React.Component {
     componentDidUpdate() {}
 
     handleSubmit = e => {
+        e.preventDefault();
         console.log(this.state);
 
         fetch(
@@ -37,8 +38,15 @@ class Form extends React.Component {
                 headers: {"content-type": "application/json"},
                 body: JSON.stringify(this.state)
             }
-        ).then(res => console.log(res.text));
-        e.preventDefault();
+        ).then(res => res.json()).then(data => {
+            if (data.msg)
+                this.setState({
+                    title: "",
+                    tags: "",
+                    content: ""
+                });
+            console.log(data);
+        });
     }
 
     handleChange = e => {
@@ -53,15 +61,15 @@ class Form extends React.Component {
             <form onSubmit={this.handleSubmit}>
                 <label>
                     Title:
-                    <input type="text" name="title" onChange={this.handleChange} />
+                    <input type="text" name="title" onChange={this.handleChange} value={this.state.title} />
                 </label>
                 <label>
                     Tags:
-                    <input type="text" name="tags" onChange={this.handleChange} />
+                    <input type="text" name="tags" onChange={this.handleChange} value={this.state.tags} />
                 </label>
                 <label>
                     Text:
-                    <textarea name="content" rows="4" cols="50" onChange={this.handleChange} ></textarea>
+                    <textarea name="content" rows="4" cols="50" onChange={this.handleChange} value={this.state.content} ></textarea>
                 </label>
                 <input type="submit" name="submit" />
             </form>
