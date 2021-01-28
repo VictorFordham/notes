@@ -1,35 +1,32 @@
 import React from "react";
 import ReactDOM from "react-dom";
-// import {
-//     BrowserRouter as Router,
-//     Switch,
-//     Route,
-//     Link
-// } from "react-router-dom";
 
-/*
-    Unfortunately this doesn't play well with form submit
-    not really a problem but just wanted to play with it
-    not going to remove it from the package dependencies yet ;)
-*/
 
-class Form extends React.Component {
+class App extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
             title: "",
             tags: "",
-            content: ""
+            content: "",
+            data: [],
+            display: []
         };
     }
 
-    componentDidMount() {}
+    reloadData = () => {
+        fetch("/notes").then(res => res.json())
+        .then(data => this.setState({data}));
+    }
+
+    componentDidMount() {
+        this.reloadData();
+    }
     componentDidUpdate() {}
 
     handleSubmit = e => {
         e.preventDefault();
-        console.log(this.state);
 
         fetch(
             "/notes",
@@ -39,13 +36,14 @@ class Form extends React.Component {
                 body: JSON.stringify(this.state)
             }
         ).then(res => res.json()).then(data => {
-            if (data.msg)
+            if (data.msg) {
                 this.setState({
                     title: "",
                     tags: "",
                     content: ""
                 });
-            console.log(data);
+                this.reloadData();
+            } else { alert("An error occurred"); }
         });
     }
 
@@ -55,9 +53,43 @@ class Form extends React.Component {
         });
     }
 
+    searchDataSet = e => {
+        let terms = e.target.value.toLowerCase();
+
+        if (terms == "") {
+            this.setState({ display: [] });
+            return;
+        }
+
+        let regex = "";
+
+        terms.split(" ").forEach(
+            word => {
+                regex += `(?=.*${word})`;
+            }
+        );
+
+        let display = this.state.data.filter(entry => {
+            let line = `${entry.title} ${entry.tags} ${entry.content}`;
+            return line.toLowerCase().match(regex);
+        });
+
+        this.setState({display});
+    }
+
     render() {
 
+        const results = line => {
+            return (
+                <div>
+                    <h4>{line.title}</h4>
+                    <p>{line.content}</p>
+                </div>
+            );
+        };
+
         return (
+            <div>
             <form onSubmit={this.handleSubmit}>
                 <label>
                     Title:
@@ -73,35 +105,18 @@ class Form extends React.Component {
                 </label>
                 <input type="submit" name="submit" />
             </form>
+
+            <input type="text" name="search" onChange={this.searchDataSet} />
+                            
+            {this.state.display.map(results)}
+            </div>
         );
     }
 }
 
-class Search extends React.Component {
-    constructor(props) {
-        super(props);
-        //this.state = 
-    }
-
-    compoentDidMount() {}
-    componentDidUpdate() {}
-
-    render() {
-
-    }
-}
-
-const NavBar = props => {
-    return (
-        <nav>
-
-        </nav>
-    )
-};
-
 const element = (
     <div>
-        <Form />
+        <App />
     </div>
 );
 
